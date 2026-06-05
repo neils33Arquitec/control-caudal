@@ -40,14 +40,11 @@ Proyecto TM/
 │   │   └── log_datos.py           # Captura de datos seriales
 │   └── simulink/
 │       └── modelo_lazo_control.md # Descripción del modelo Simulink
+├── control-caudal.ino     # Sketch principal de Arduino (raíz)
 ├── src/
-│   ├── firmware/
-│   │   └── control-caudal.ino     # Sketch principal de Arduino
-│   ├── include/
-│   │   └── config.h               # Constantes y configuración global
-│   └── lib/
-│       ├── PIController.cpp       # Implementación del PI discreto
-│       └── PIController.h         # Cabecera de la clase PI
+│   ├── config.h               # Constantes y configuración global
+│   ├── PIController.cpp       # Implementación del PI discreto
+│   └── PIController.h         # Cabecera de la clase PI
 ├── test/
 │   ├── integration/
 │   │   └── procedimiento-validacion.md  # Pruebas de integración

@@ -213,8 +213,8 @@ Arduino 5V ─── Bus 5V protoboard (alimenta sensor, LCD, potenciómetro)
 
 ## 10. Paso 8: Carga del firmware
 
-1. Abrir `src/firmware/control-caudal.ino` en Arduino IDE.
-2. Las librerías `PIController.h` y `config.h` se incluyen automáticamente al estar en las carpetas `lib/` e `include/`.
+1. Abrir `control-caudal.ino` en Arduino IDE.
+2. Las librerías `PIController.h` y `config.h` se incluyen automáticamente al estar dentro de `src/`.
 3. Ir a **Herramientas → Gestor de librerías** e instalar `LiquidCrystal I2C` de Frank de Brabander.
 4. Seleccionar placa: **Arduino Uno**.
 5. Seleccionar puerto COM correspondiente.

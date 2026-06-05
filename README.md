@@ -35,7 +35,7 @@ SetPoint ──▶ [PI Discreto] ──▶ PWM ──▶ [L298N] ──▶ [Bomb
 
 ## Instalación
 
-1. Abrir `src/firmware/control-caudal.ino` en Arduino IDE.
+1. Abrir `control-caudal.ino` en Arduino IDE.
 2. Instalar librerías: `LiquidCrystal_I2C` (vía Manager de librerías).
 3. Conectar hardware según `hardware/schematics/wiring-diagram.md`.
 4. Seleccionar placa **Arduino Uno** y puerto COM.
@@ -44,7 +44,8 @@ SetPoint ──▶ [PI Discreto] ──▶ PWM ──▶ [L298N] ──▶ [Bomb
 ## Estructura del repositorio
 
 ```
-├── src/           Código fuente (firmware + librerías)
+├── control-caudal.ino   Sketch principal de Arduino
+├── src/           Librerías y configuración
 ├── hardware/      Esquemáticos, BOM, datasheets
 ├── scripts/       MATLAB, Python, Simulink
 ├── test/          Pruebas unitarias y de validación
