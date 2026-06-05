@@ -1,0 +1,33 @@
+# Arduino
+*.o
+*.elf
+*.hex
+build/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+
+# MATLAB
+*.asv
+*.m~*.mlapp~
+
+# Simulink
+*.slxc
+slprj/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Windows
+Thumbs.db
+*.bak
+
+# Datos generados
+assets/graficos/*.csv
