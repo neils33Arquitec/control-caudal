@@ -29,5 +29,5 @@ jobs:
       - name: Compile sketch
         run: |
           arduino-cli compile --fqbn arduino:avr:uno \
-            control-caudal.ino \
+            src/firmware/control-caudal.ino \
             --output-dir build/
