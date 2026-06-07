@@ -11,6 +11,7 @@
 | [Sesión 001](#sesión-001) | Junio 2026 | Creación del proyecto, estructura, marco teórico |
 | [Sesión 002](#sesión-002) | Junio 2026 | Documentación de hardware, BOM, wiring |
 | [Sesión 003](#sesión-003) | Junio 2026 | Código fuente, scripts, tests, archivos raíz, GitHub, assets, manuales |
+| [Sesión 004](#sesión-004) | Junio 2026 | Nota técnica: corrección de escalado PI en prototipo real |
 
 ---
 
@@ -260,6 +261,72 @@ Completar la totalidad del proyecto: código fuente funcional, scripts de simula
 - [ ] Ejecutar pruebas de validación y registrar resultados en `test/integration/procedimiento-validacion.md`.
 - [ ] Generar gráficos de respuesta con `graficar_respuesta.py` y guardarlos en `assets/graficos/`.
 - [ ] Ajustar dirección I2C del LCD si es distinta a 0x27.
+
+---
+
+## Sesión 004 — Nota técnica: Corrección de escalado PI
+
+- **Fecha:** Junio 2026
+- **Estado:** Pendiente (cambios sin aplicar)
+
+### Objetivo
+Documentar el problema de escalado detectado durante la prueba del prototipo real y la solución propuesta para su implementación en el próximo montaje.
+
+### Participantes
+- Neil Edickson Suarez Arevalo
+- Jose Fabian Salas García
+
+### Problema detectado en prototipo real
+Durante la prueba del prototipo, la bomba se activó mostrando:
+
+| Variable | Valor | Comentario |
+|---|---|---|
+| SP | 0.6 L/min | SetPoint desde el potenciómetro |
+| PV | ~0.04 L/min | Caudal real (0.2 con 1 decimal en LCD) |
+| Error | 0.56 L/min | SP - PV |
+| PWM | 150 | Salida al motor |
+
+**Causa raíz:** El controlador PI opera en L/min pero su salida se usa directamente como PWM (0-255) sin escalar. Con KP=2.0, un error de 0.56 L/min produce solo ~1 PWM de corrección:
+
+```
+P term = KP × error = 2.0 × 0.56 ≈ 1.12 PWM
+```
+
+La bomba no se mueve con PWM 1 → el error persiste → la integral acumula durante minutos → cuando finalmente el PWM supera el umbral de arranque de la bomba, el integrador ya acumuló un valor desproporcionado (PWM 150 para un SP de 0.6 L/min).
+
+### Solución propuesta: Escalado de salida del PI
+
+El PI debe trabajar internamente en L/min (0 a SP_MAX) y escalar su salida a PWM al final.
+
+| Archivo | Cambio |
+|---|---|
+| `src/firmware/control-caudal.ino:7` | `PIController pi(KP, KI, TS, 0.0, SP_MAX)` — límites en L/min |
+| `src/firmware/control-caudal.ino:77` | `float pi_out = pi.compute(sp, pv); pwm_out = (int)((pi_out / SP_MAX) * PWM_MAX);` |
+| `src/firmware/control-caudal.ino` | Añadir detección de cambio de setpoint → `pi.reset()` |
+| `test/unit/test_pi_controller.cpp` | Actualizar límites de saturación de 0-255 a 0-SP_MAX |
+
+### Verificación con Ziegler-Nichols
+
+El script `scripts/matlab/sintonizar_ZN.m` modela la planta con ganancia K=0.02 (L/min)/PWM. Con el escalado (×42.5), la ganancia efectiva desde la perspectiva del PI es:
+
+```
+K_efectiva = 0.02 × (255/6) ≈ 0.85 (L/min) / (L/min)
+```
+
+Aplicando Ziegler-Nichols con K_efectiva:
+
+| Parámetro | ZN teórico | Efectivo con KP=2.0, KI=0.5 |
+|---|---|---|
+| KP efectivo | ~2.26 | 2.0 |
+| KI efectivo | ~0.50 | 0.5 |
+
+Los valores actuales (KP=2.0, KI=0.5) están muy cerca del óptimo ZN una vez aplicado el escalado.
+
+### Pendientes
+- [ ] Aplicar cambios en `src/firmware/control-caudal.ino`
+- [ ] Actualizar `test/unit/test_pi_controller.cpp`
+- [ ] Probar en prototipo real y verificar respuesta
+- [ ] Ajustar KP/KI finamente si es necesario
 
 ---
 
