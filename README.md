@@ -33,25 +33,43 @@ SetPoint ──▶ [PI Discreto] ──▶ PWM ──▶ [L298N] ──▶ [Bomb
 | A4 (SDA) | LCD I2C |
 | A5 (SCL) | LCD I2C |
 
-## Instalación
+## Instalación (PlatformIO / arduino-cli)
 
-1. Abrir `control-caudal.ino` en Arduino IDE.
-2. Instalar librerías: `LiquidCrystal_I2C` (vía Manager de librerías).
+1. Abrir `src/firmware/control-caudal.ino` desde tu editor.
+2. Instalar librerías: `LiquidCrystal_I2C`.
 3. Conectar hardware según `hardware/schematics/wiring-diagram.md`.
 4. Seleccionar placa **Arduino Uno** y puerto COM.
-5. Cargar el sketch.
+5. Compilar y cargar.
+
+## Programación con Arduino IDE
+
+El proyecto mantiene los archivos fuente en `src/firmware/` como
+estructura principal. Si prefieres usar **Arduino IDE** (que requiere
+que el folder tenga el mismo nombre que el sketch), usa la carpeta
+`ArduinoIDEcontrol-caudal/`:
+
+1. Abre `ArduinoIDEcontrol-caudal/control-caudal.ino` desde Arduino IDE.
+2. Verifica que `config.h`, `PIController.h` y `PIController.cpp` estén
+   en la misma carpeta (ya están).
+3. Instala la librería `LiquidCrystal_I2C` desde el Gestor de librerías.
+4. Selecciona **Arduino Uno** como placa.
+5. Haz clic en **Subir**.
+
+> **Nota:** Si modificas archivos, replica los cambios también en
+> `src/firmware/` para mantener sincronizada la estructura del repositorio.
 
 ## Estructura del repositorio
 
 ```
-├── control-caudal.ino   Sketch principal de Arduino
-├── src/           Librerías y configuración
-├── hardware/      Esquemáticos, BOM, datasheets
-├── scripts/       MATLAB, Python, Simulink
-├── test/          Pruebas unitarias y de validación
-├── docs/          Documentación técnica
-├── assets/        Diagramas, fotos, gráficos
-└── .github/       CI y templates
+├── ArduinoIDEcontrol-caudal/   Copia plana para Arduino IDE
+├── src/firmware/               Código fuente principal
+├── hardware/                   Esquemáticos, BOM, datasheets
+├── scripts/                    MATLAB, Python, Simulink
+├── test/                       Pruebas unitarias y de validación
+├── docs/                       Documentación técnica
+├── sesiones/                   Bitácora de desarrollo
+├── assets/                     Diagramas, fotos, gráficos
+└── .github/                    CI y templates
 ```
 
 ## Autores
