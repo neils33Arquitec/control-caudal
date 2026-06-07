@@ -176,10 +176,10 @@ Completar la totalidad del proyecto: código fuente funcional, scripts de simula
 
 | Archivo | Descripción |
 |---|---|
-| `control-caudal.ino` | Sketch principal de Arduino (raíz del proyecto). `setup()`: init LCD, pines, interrupción. `loop()`: lectura SP/PV, PI → PWM, LCD, serial cada 1s. |
-| `src/PIController.h` | Clase `PIController` con métodos: `compute()`, `reset()`, `setGains()`, `getIntegral()`. |
-| `src/PIController.cpp` | Implementación: PI discreto por Backward Euler, anti-windup por clamping con saturación condicional del integrador. |
-| `src/config.h` | Constantes del sistema: pines (2, 7, 8, 9, A0), Kp=2.0, Ki=0.5, Ts=0.1s, 5880 pulsos/L, LCD 0x27. |
+| `src/firmware/control-caudal.ino` | Sketch principal de Arduino. `setup()`: init LCD, pines, interrupción. `loop()`: lectura SP/PV, PI → PWM, LCD, serial cada 1s. |
+| `src/firmware/PIController.h` | Clase `PIController` con métodos: `compute()`, `reset()`, `setGains()`, `getIntegral()`. |
+| `src/firmware/PIController.cpp` | Implementación: PI discreto por Backward Euler, anti-windup por clamping con saturación condicional del integrador. |
+| `src/firmware/config.h` | Constantes del sistema: pines (2, 7, 8, 9, A0), Kp=2.0, Ki=0.5, Ts=0.1s, 5880 pulsos/L, LCD 0x27. |
 
 #### Scripts (scripts/)
 
@@ -232,7 +232,7 @@ Completar la totalidad del proyecto: código fuente funcional, scripts de simula
 | Archivo | Cambio |
 |---|---|
 | `hardware/bom/bill-of-materials.md` | Numeración de componentes pasivos corregida (#12→#17 → #10→#15). |
-| `src/config.h` | Eliminadas macros no utilizadas (`CAUDAL_MAXIMO`, `PIN_LCD_SDA`, `PIN_LCD_SCL`). |
+| `src/firmware/config.h` | Eliminadas macros no utilizadas (`CAUDAL_MAXIMO`, `PIN_LCD_SDA`, `PIN_LCD_SCL`). |
 | `test/unit/test_pi_controller.cpp` | Ruta de includes corregida. |
 | `docs/structure.md` | Actualizado el árbol de directorios para reflejar el estado final del proyecto. |
 

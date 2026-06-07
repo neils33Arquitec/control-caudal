@@ -1,12 +1,12 @@
 /*
  * test_pi_controller.cpp
  * Pruebas unitarias del controlador PI (compilar y ejecutar en PC)
- * Compilar: g++ -o test_pi test_pi_controller.cpp ../src/PIController.cpp -I../src
+ * Compilar: g++ -o test_pi test_pi_controller.cpp ../src/firmware/PIController.cpp -I../src/firmware
  */
 
 #include <iostream>
 #include <cmath>
-#include "../src/PIController.h"
+#include "../src/firmware/PIController.h"
 
 int total = 0;
 int pasaron = 0;
