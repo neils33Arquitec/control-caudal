@@ -323,30 +323,156 @@ Aplicando Ziegler-Nichols con K_efectiva:
 Los valores actuales (KP=2.0, KI=0.5) están muy cerca del óptimo ZN una vez aplicado el escalado.
 
 ### Pendientes
-- [ ] Aplicar cambios en `src/firmware/control-caudal.ino`
-- [ ] Actualizar `test/unit/test_pi_controller.cpp`
+- [x] Aplicar cambios en `src/firmware/control-caudal.ino` ← completado en Sesión 005
+- [x] Actualizar `test/unit/test_pi_controller.cpp` ← completado en Sesión 005
 - [ ] Probar en prototipo real y verificar respuesta
 - [ ] Ajustar KP/KI finamente si es necesario
 
 ---
 
+## Sesión 005 — Implementación de mejoras y corrección de bugs
+
+- **Fecha:** Junio 2026
+- **Estado:** Completada
+
+### Objetivo
+Implementar todas las mejoras documentadas en `sesiones/plan-mejoras.md` (Sesión 004), realizar una revisión completa del proyecto y corregir los bugs detectados durante la revisión.
+
+### Participantes
+- Neil Edickson Suarez Arevalo
+- Jose Fabian Salas García
+
+### Archivos modificados
+
+#### Firmware
+
+| Archivo | Cambios |
+|---|---|
+| `src/firmware/control-caudal.ino` | 4 correcciones (ver detalle abajo) |
+| `ArduinoIDEcontrol-caudal/control-caudal.ino` | Mismas 4 correcciones (copia sincronizada) |
+| `test/unit/test_pi_controller.cpp` | Límites de saturación actualizados de 255 a 6.0 |
+
+#### Documentación
+
+| Archivo | Cambios |
+|---|---|
+| `docs/manual-usuario.md` | Sección 4.1 reescrita con ciclo de 3 mensajes LCD; sección 5.2 con nota del reset de integral |
+| `docs/technical-documentation.md` | Fórmula del sensor corregida (F/7.5→F/98); pseudocódigo actualizado con límites en L/min y paso de escalado; diagrama LCD actualizado |
+| `assets/diagrama-bloques.md` | Flujo de control actualizado (paso de escalado, reset de SP, ciclo LCD); lazo de control actualizado |
+| `docs/structure.md` | Árbol de directorios actualizado con carpetas `ArduinoIDEcontrol-caudal/` y `sesiones/`; conteo corregido a 36 archivos |
+| `README.md` | Nueva sección "Comportamiento del LCD" con tabla de los 3 mensajes |
+
+#### Documentación nueva
+
+| Archivo | Descripción |
+|---|---|
+| `docs/nota-tecnica-ganancias-pi.md` | Nota técnica explicando KP y KI con valores reales del sistema |
+
+---
+
+### Cambios en el firmware — detalle
+
+#### 1. Corrección de escalado del PI (de plan-mejoras.md)
+
+**Problema:** El PI usaba límites 0–255 (PWM) en lugar de 0–SP_MAX (L/min), produciendo correcciones de ~1 PWM para errores pequeños. La integral acumulaba por minutos antes de que la bomba respondiera.
+
+**Solución aplicada:**
+```cpp
+// Antes:
+PIController pi(KP, KI, TS, PWM_MIN, PWM_MAX);
+pwm_out = (int)pi.compute(setpoint, caudal);
+
+// Después:
+PIController pi(KP, KI, TS, 0.0, SP_MAX);
+float pi_out = pi.compute(setpoint, caudal);
+pwm_out = (int)((pi_out / SP_MAX) * (float)PWM_MAX);
+```
+
+#### 2. Reset del integrador por cambio de setpoint (de plan-mejoras.md)
+
+Cuando el usuario gira el potenciómetro más de 0.05 L/min, el integrador se reinicia para evitar que la acción acumulada del setpoint anterior afecte la respuesta al nuevo valor.
+
+```cpp
+if (fabs(setpoint - setpoint_anterior) > 0.05) {
+    pi.reset();
+    setpoint_anterior = setpoint;
+}
+```
+
+#### 3. Ciclo de 3 mensajes en el LCD (de plan-mejoras.md)
+
+El LCD 16×2 rota su contenido entre 3 mensajes cada 10 segundos usando `millis()`, sin bloquear el lazo de control:
+
+| Tiempo | Contenido |
+|---|---|
+| 0–6 s | SP, PV, Error, PWM |
+| 6–8 s | ADC, voltaje del potenciómetro, SP |
+| 8–10 s | PWM absoluto (0-255) y porcentaje |
+
+#### 4. Corrección del cálculo de caudal (bug detectado en revisión)
+
+**Problema:** `calcular_caudal()` se llama cada TS=0.1 s y resetea el contador de pulsos. La fórmula original `(p * 60) / PULSOS_POR_LITRO` asume `p` = pulsos por segundo, pero `p` son pulsos en 100 ms. El caudal se leía **10 veces menor al real**.
+
+```cpp
+// Antes:
+return (p * 60.0) / PULSOS_POR_LITRO;
+
+// Después:
+return (p * 60.0) / (PULSOS_POR_LITRO * TS);
+```
+
+Este bug explica parcialmente la lectura PV ≈ 0.04 L/min observada en el prototipo (debería haber sido ~0.4 L/min).
+
+---
+
+### Decisiones técnicas
+
+| Decisión | Justificación |
+|---|---|
+| No cambiar la clase `PIController` | El bug de caudal está en la capa de lectura del sensor, no en el controlador. El PI en sí es correcto. |
+| Usar `PULSOS_POR_LITRO * TS` en la fórmula | Hace explícita la dependencia del período de muestreo, facilitando ajustes futuros de TS. |
+| Redacción "3 mensajes" en lugar de "3 pantallas" | Corrección semántica: es una sola pantalla LCD física que rota su contenido. |
+
+---
+
+### Problemas encontrados
+
+| Problema | Causa | Solución |
+|---|---|---|
+| PV leía 10× por debajo del valor real | `calcular_caudal()` no dividía por TS | Corregido: `(p * 60) / (PULSOS_POR_LITRO * TS)` |
+| Fórmula `Q = F/7.5` en documentación técnica | Copiada de sensor YF-S201 (sensor diferente) | Corregida a `Q = F/98` (GFS401 real) |
+| Pseudocódigo con `pwm_min/max = 0/255` | No actualizado tras corrección de escalado | Actualizado a `out_min=0.0`, `out_max=SP_MAX` |
+
+---
+
+### Pendientes
+
+- [ ] Probar en prototipo real con todos los bugs corregidos
+- [ ] Verificar que el caudal se lee correctamente (PV debe mostrar valores entre 0.3 y 6 L/min)
+- [ ] Sintonizar KP y KI experimentalmente con Ziegler-Nichols tras la prueba de escalón
+- [ ] Capturar datos con `scripts/python/log_datos.py` y graficar con `graficar_respuesta.py`
+- [ ] Registrar resultados en `test/integration/procedimiento-validacion.md`
+
+---
+
 ## Resumen del proyecto
 
-### Total de archivos: 30
+### Total de archivos: 36
 
 | Categoría | Archivos | Última sesión |
 |---|---|---|
-| **Código fuente** (`src/`) | 4 | 003 |
+| **Código fuente** (`src/`) | 4 | 005 |
+| **Arduino IDE** (`ArduinoIDEcontrol-caudal/`) | 4 | 005 |
 | **Hardware** (`hardware/`) | 6 | 002 |
 | **Scripts** (`scripts/`) | 5 | 003 |
-| **Tests** (`test/`) | 2 | 003 |
-| **Documentación** (`docs/`) | 6 | 003 |
-| **Assets** (`assets/`) | 1 | 003 |
+| **Tests** (`test/`) | 2 | 005 |
+| **Documentación** (`docs/`) | 6 | 005 |
+| **Assets** (`assets/`) | 1 | 005 |
 | **GitHub** (`.github/`) | 3 | 003 |
 | **Raíz** | 3 | 003 |
-| **Sesiones** | 1 | 003 |
-| **Total** | **31** | |
+| **Sesiones** | 2 | 005 |
+| **Total** | **36** | |
 
-### Estado del proyecto: COMPLETADO
+### Estado del proyecto: LISTO PARA PRUEBA EN PROTOTIPO
 
-El proyecto cuenta con firmware funcional para Arduino, marco teórico documentado, scripts de simulación, pruebas unitarias, procedimiento de validación, CI/CD, licencia, manual de montaje y manual de usuario.
+El firmware tiene todos los bugs corregidos y las mejoras implementadas. La documentación está sincronizada con el código. El siguiente paso es la prueba física en el prototipo real para validar el comportamiento del sistema y realizar la sintonización final de KP y KI.

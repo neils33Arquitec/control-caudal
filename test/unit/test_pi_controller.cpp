@@ -26,7 +26,7 @@ int main() {
 
     // Test 1: Creación y valores iniciales
     std::cout << "--- Test 1: Inicialización ---\n";
-    PIController pi(2.0, 0.5, 0.1, 0, 255);
+    PIController pi(2.0, 0.5, 0.1, 0, 6.0);
     verificar("Integral inicial en cero", pi.getIntegral() == 0.0f);
 
     // Test 2: SetPoint = PV → salida 0
@@ -47,7 +47,7 @@ int main() {
     for (int i = 0; i < 100; i++) {
         out = pi.compute(6.0, 0.0);
     }
-    verificar("Saturación a 255", out <= 255.0f);
+    verificar("Saturación a 6.0", out <= 6.0f);
 
     // Test 5: Saturación inferior
     std::cout << "\n--- Test 5: Saturación inferior ---\n";

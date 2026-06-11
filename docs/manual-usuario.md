@@ -61,13 +61,35 @@ Al conectar la alimentación:
 
 ## 4. Interfaz de usuario
 
-### 4.1 Pantalla LCD
+### 4.1 Pantalla LCD — Ciclo de 3 mensajes
+
+El LCD 16×2 es una sola pantalla física. El sistema rota automáticamente el contenido mostrado entre 3 mensajes diferentes cada 10 segundos. No requiere ninguna acción del usuario.
+
+**Pantalla 1 — Normal (0 a 6 s):** variables principales del lazo de control.
 
 ```
-┌─────────────────────────────────┐
-│ SP:  3.0  PV:  2.9              │  ← Línea 1
-│ E:   0.1  PWM: 150              │  ← Línea 2
-└─────────────────────────────────┘
+┌──────────────────┐
+│ SP: 3.0  PV: 2.9 │  ← Línea 1
+│ E:  0.1  PWM:150 │  ← Línea 2
+└──────────────────┘
+```
+
+**Pantalla 2 — Potenciómetro (6 a 8 s):** lectura directa del ADC y voltaje del potenciómetro.
+
+```
+┌──────────────────┐
+│ ADC:512  2.5V    │  ← Línea 1
+│ SP: 3.0 L/min    │  ← Línea 2
+└──────────────────┘
+```
+
+**Pantalla 3 — Potencia (8 a 10 s):** señal de control a la bomba en valor absoluto y porcentaje.
+
+```
+┌──────────────────┐
+│ PWM: 150/255     │  ← Línea 1
+│ 58.8%            │  ← Línea 2
+└──────────────────┘
 ```
 
 | Indicador | Significado | Rango |
@@ -76,6 +98,8 @@ Al conectar la alimentación:
 | **PV** | Process Variable — caudal real | 0.0 – 6.0 L/min |
 | **E** | Error (SP − PV) | −6.0 – 6.0 |
 | **PWM** | Señal aplicada a la bomba | 0 – 255 |
+| **ADC** | Valor crudo del potenciómetro | 0 – 1023 |
+| **%** | Porcentaje de potencia entregado a la bomba | 0 – 100% |
 
 ### 4.2 Potenciómetro (control de caudal)
 
@@ -124,7 +148,7 @@ Después de cambiar el SetPoint:
 
 Girar el potenciómetro lentamente. El sistema responde automáticamente ajustando la velocidad de la bomba.
 
-> **Nota:** Si se gira muy rápido, puede haber un ligero sobreimpulso temporal. Esto es normal y el controlador lo corrige en segundos.
+> **Nota:** Si se gira más de 0.05 L/min de golpe, el controlador reinicia automáticamente el término integral para evitar que la acción acumulada del setpoint anterior afecte la respuesta al nuevo valor. Esto reduce el sobreimpulso ante cambios bruscos.
 
 ### 5.3 Apagado
 

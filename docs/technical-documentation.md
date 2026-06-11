@@ -158,20 +158,21 @@ Ts = 0.1    // Período de muestreo en segundos (100 ms)
 
 // Variables globales
 integral = 0
-error_anterior = 0
-pwm_min = 0
-pwm_max = 255
+out_min = 0.0      // Límite inferior en L/min
+out_max = SP_MAX   // Límite superior en L/min (6.0)
 
 // Ejecutar en cada ciclo de control
 PI_Controller(setpoint, medicion):
     error = setpoint - medicion
     integral = integral + Ki * Ts * error
     // Anti-Windup: saturar integral
-    integral = constrain(integral, pwm_min - Kp*error, pwm_max - Kp*error)
-    u = Kp * error + integral
+    integral = constrain(integral, out_min - Kp*error, out_max - Kp*error)
+    u = Kp * error + integral          // salida en L/min
     // Saturación de salida
-    u = constrain(u, pwm_min, pwm_max)
-    return u
+    u = constrain(u, out_min, out_max)
+    // Escalar a PWM para la bomba
+    pwm = (u / SP_MAX) * 255
+    return pwm
 ```
 
 ### 3.4 Anti-Windup (Protección antivuelco integral)
@@ -252,12 +253,13 @@ SetPoint ──────▶│  ADC (Pot) ──▶ SP ──┐             
                 │               ┌──────┴───────┐                       │
                 │               │    Cálculo    │                       │
                 │               │   Caudal     │                       │
-                │   Interrupción│  (Q = F/7.5) │                       │
+                │   Interrupción│  (Q = F/98)  │                       │
 Sensor ────────▶│  ◀───────────┴──────────────┘                       │
 (GFS401)        │                                                      │
-                │                      LCD 16×2                        │
-                │         SP: xx.x L/min  PV: xx.x L/min              │
-                │         Error: xx.x      PWM: xxx                    │
+                │         LCD 16×2 — ciclo de 3 mensajes (10 s)        │
+                │  [0-6s]  SP:x.x PV:x.x  /  E:x.x PWM:xxx           │
+                │  [6-8s]  ADC:xxx x.xV   /  SP:x.x L/min             │
+                │  [8-10s] PWM:xxx/255    /  xx.x%                     │
                 └──────────────────────────────────────────────────────┘
 ```
 

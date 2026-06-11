@@ -33,6 +33,16 @@ SetPoint ──▶ [PI Discreto] ──▶ PWM ──▶ [L298N] ──▶ [Bomb
 | A4 (SDA) | LCD I2C |
 | A5 (SCL) | LCD I2C |
 
+## Comportamiento del LCD
+
+El LCD 16×2 rota automáticamente entre 3 mensajes cada 10 segundos:
+
+| Tiempo | Pantalla | Contenido |
+|---|---|---|
+| 0 – 6 s | Normal | `SP:3.0 PV:2.9` / `E:0.1 PWM:150` |
+| 6 – 8 s | Potenciómetro | `ADC:512 2.5V` / `SP:3.0 L/min` |
+| 8 – 10 s | Potencia | `PWM: 150/255` / `58.8%` |
+
 ## Instalación (PlatformIO / arduino-cli)
 
 1. Abrir `src/firmware/control-caudal.ino` desde tu editor.
